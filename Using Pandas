@@ -1,0 +1,73 @@
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+
+dict= {
+    "Time" : ["08:00", "09:30", "11:00", "12:30","02:00","03:30", "05:00"],
+    "saturday" : ["","","","","","",""],
+    "sunday" : ["","","","","","",""],
+    "monday" : ["","","","","","",""],
+    "tuesday" : ["","","","","","",""],
+    "wednesday" : ["","","","","","",""],
+    "thursday" : ["","","","","","",""]
+}
+df=pd.DataFrame(dict)
+
+def add(li):
+    if df[li[1]][li[2]]!="":
+        temp=df[li[1]][li[2]]
+        df[li[1]][li[2]]=li[0]+" & " +temp
+    else:
+        df[li[1]][li[2]]=li[0]
+
+def cle(li):
+    if li[1]=="sa": li[1]="saturday"
+    elif li[1]=="su": li[1]="sunday"
+    elif li[1]=="mo": li[1]="monday"
+    elif li[1]=="tu": li[1]="tuesday"
+    elif li[1]=="we": li[1]="wednesday"
+    elif li[1]=="th": li[1]="thursday"
+
+    if li[2]=="08:00": li[2]=0
+    elif li[2]=="09:30": li[2]=1
+    elif li[2]=="11:00": li[2]=2
+    elif li[2]=="12:30": li[2]=3
+    elif li[2]=="02:00": li[2]=4
+    elif li[2]=="03:30": li[2]=5
+    elif li[2]=="05:00": li[2]=6
+
+
+url = "https://admissions.bracu.ac.bd/academia/admissionRequirement/getAvailableSeatStatus"
+content=requests.get(url)
+html=content.content
+soup=BeautifulSoup(html,"html.parser")
+
+
+cl,sl,tl=[],[],[]
+course_name=soup.find_all(["td"],style="text-align: center; width: 100px")
+for i in course_name: cl.append(i.get_text())
+
+course_sec=soup.find_all(["td"],style="text-align: center; width: 69px;")
+for i in course_sec: sl.append(i.get_text())
+
+course_time=soup.find_all(["td"],style="text-align: center; width: 290px;")
+for i in course_time: tl.append(i.get_text())
+
+
+for i in range(1):
+    # course,section=input().split(" ")
+    
+    course="CSE110"        #input(" Please Enter the Course Name : ")
+    section="01"       #input(" Please Enter the Course Name : ")
+    # print(course)
+    for i in range(len(cl)):
+        if cl[i]==course:
+            if sl[i]==section:
+                new=tl[i].split(') ')
+                for j in new:
+                    day=j[:2].lower()
+                    time=j[3:8]
+                    fl=[course,day,time]
+                    cle(fl)
+                    add(fl)
+df
